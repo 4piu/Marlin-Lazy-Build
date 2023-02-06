@@ -9,6 +9,9 @@ on:
         required: true
         default: bugfix-2.1.x
         description: Marlin branch to build, eg. release-2.1.2
+      release_tag:
+        required: true
+        description: Release tag
       release_name:
         description: Release name
 
@@ -42,5 +45,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: ${{ github.event.inputs.release_name }}
+          tag_name: ${{ github.event.inputs.release_tag }}
           fail_on_unmatched_files: true
           files: "*"
