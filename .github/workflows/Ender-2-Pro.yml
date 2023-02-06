@@ -2,6 +2,9 @@
 
 name: Build Marlin - Ender 2 Pro
 
+permissions:
+  contents: write
+  
 on:
   workflow_dispatch:
     inputs:
