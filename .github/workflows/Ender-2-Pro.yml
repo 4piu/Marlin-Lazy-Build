@@ -43,6 +43,10 @@ jobs:
             -v "$(pwd)/build":/home/platformio/build \
             -v "$(pwd)/${{ env.CONFIG_DIR }}":/home/platformio/CustomConfiguration \
             frealmyr/marlin-build:latest
+            
+      - name: Debug
+        run: | 
+          tree -L 2
 
       - name: Release firmware
         uses: softprops/action-gh-release@v1
