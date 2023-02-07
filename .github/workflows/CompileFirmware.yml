@@ -63,6 +63,12 @@ jobs:
       - name: Show output
         run: |
           tree -L 5
+          
+      - name: Calculate hash
+        run: |
+          cd Marlin/.pio/build/${{ github.event.inputs.board }}
+          FIRMWARE_FILENAME=$(find . -name "*.bin" -type f)
+          md5sum ${FIRMWARE_FILENAME} > ${FIRMWARE_FILENAME}.md5
 
       - name: Release firmware
         uses: softprops/action-gh-release@v1
