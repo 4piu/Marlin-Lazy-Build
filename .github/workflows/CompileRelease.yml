@@ -12,7 +12,7 @@ on:
       board:
         required: true
         default: STM32F103RE_creality
-        description: board environment
+        description: Board environment
       config:
         required: true
         default: Configurations/config/examples/Creality/Ender-2 Pro/CrealityV423
@@ -20,14 +20,14 @@ on:
       repository:
         required: true
         default: MarlinFirmware/Marlin
-        description: Marlin Repository URL
+        description: Marlin Repository
       ref:
-        description: branch / tag / SHA to checkout
+        description: Branch / tag / SHA to checkout
       release_tag:
         required: true
-        description: Release tag for the compiled firmware
+        description: Release tag for compiled firmware
       release_name:
-        description: Release name for the compiled firmware
+        description: Release name for compiled firmware
 
 jobs:
   build_and_release:
