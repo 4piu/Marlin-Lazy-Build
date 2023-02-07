@@ -1,0 +1,75 @@
+# This a Github Action for building Marlin Firmware.
+# Marlin documentation on how to compile with platformio: https://marlinfw.org/docs/basics/install_platformio_cli.html
+
+name: Compile Marlin Firmware
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      board:
+        required: true
+        default: STM32F103RE_creality
+        description: board environment (https://marlinfw.org/docs/basics/install_platformio_cli.html#find-the-environment-for-your-board)
+      config:
+        required: true
+        default: Configurations/config/examples/Creality/Ender-2 Pro/CrealityV423
+        description: Configuration directory
+      repository:
+        required: true
+        default: MarlinFirmware/Marlin
+        description: Marlin Repository URL
+      ref:
+        description: branch / tag / SHA to checkout, eg. release-2.1.2
+      release_tag:
+        required: true
+        description: Release tag for the compiled firmware
+      release_name:
+        description: Release name for the compiled firmware
+
+jobs:
+  build_and_release:
+    name: Build and release firmware
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup environment
+        run: |
+          python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
+          echo "${HOME}/.platformio/penv/bin/" >> $GITHUB_PATH
+
+      - name: Check out repo
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Clone source code
+        uses: actions/checkout@v3
+        with: 
+          repository: ${{ github.event.inputs.repository }}
+          ref: ${{ github.event.inputs.ref }}
+          path: Marlin
+
+      - name: Configuration before compiling
+        run: |
+          cp -r ${{ github.event.inputs.config }}/* Marlin/Marlin/
+
+      - name: Compile firmware
+        run: |
+          pio run --project-dir Marlin --environment ${{ github.event.inputs.board }}
+      
+      - name: Show output
+        run: |
+          tree -L 5
+
+      - name: Release firmware
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ github.event.inputs.release_name }}
+          tag_name: ${{ github.event.inputs.release_tag }}
+          fail_on_unmatched_files: true
+          files: |
+            'Marlin/.pio/build/**/*.bin'
+            'Marlin/.pio/build/**/*.md5'
