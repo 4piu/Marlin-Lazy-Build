@@ -12,7 +12,7 @@ on:
       board:
         required: true
         default: STM32F103RE_creality
-        description: board environment (https://marlinfw.org/docs/basics/install_platformio_cli.html#find-the-environment-for-your-board)
+        description: board environment
       config:
         required: true
         default: Configurations/config/examples/Creality/Ender-2 Pro/CrealityV423
@@ -22,7 +22,7 @@ on:
         default: MarlinFirmware/Marlin
         description: Marlin Repository URL
       ref:
-        description: branch / tag / SHA to checkout, eg. release-2.1.2
+        description: branch / tag / SHA to checkout
       release_tag:
         required: true
         description: Release tag for the compiled firmware
@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Setup environment
+      - name: Setup PatformIO
         run: |
           python3 -c "$(curl -fsSL https://raw.githubusercontent.com/platformio/platformio/master/scripts/get-platformio.py)"
           echo "${HOME}/.platformio/penv/bin/" >> $GITHUB_PATH
@@ -45,14 +45,14 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Clone source code
+      - name: Clone Marlin source code
         uses: actions/checkout@v3
         with: 
           repository: ${{ github.event.inputs.repository }}
           ref: ${{ github.event.inputs.ref }}
           path: Marlin
 
-      - name: Configuration before compiling
+      - name: Pre-compiling configuration
         run: |
           cp -r "${{ github.event.inputs.config }}"/* Marlin/Marlin/
 
@@ -65,12 +65,8 @@ jobs:
           cd Marlin/.pio/build/${{ github.event.inputs.board }}
           FIRMWARE_FILENAME=$(find . -name "*.bin" -type f)
           md5sum ${FIRMWARE_FILENAME} > ${FIRMWARE_FILENAME}.md5
-          
-      - name: Show output
-        run: |
-          tree -a -L 5 Marlin/.pio/build
 
-      - name: Release firmware
+      - name: Create release
         uses: softprops/action-gh-release@v1
         with:
           name: ${{ github.event.inputs.release_name }}
