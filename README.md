@@ -4,7 +4,7 @@ Build Marlin firmware with Github Actions
 ## Steps
 
 1. Fork this repo
-2. Commit your modification to the submodule `Configurations` as you like
+2. Commit your modification to the submodule `Configurations` as you like. You may want to change it to your own fork
 3. In Actions, dispatch the workflow manually
 4. Get the compiled firmware in release
 
