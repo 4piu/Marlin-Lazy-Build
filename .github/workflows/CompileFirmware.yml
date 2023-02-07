@@ -77,5 +77,5 @@ jobs:
           tag_name: ${{ github.event.inputs.release_tag }}
           fail_on_unmatched_files: true
           files: |
-            'Marlin/.pio/build/**/*.bin'
-            'Marlin/.pio/build/**/*.md5'
+            Marlin/.pio/build/${{ github.event.inputs.board }}/*.bin
+            Marlin/.pio/build/${{ github.event.inputs.board }}/*.md5
