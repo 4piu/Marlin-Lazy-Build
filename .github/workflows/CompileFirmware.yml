@@ -62,13 +62,13 @@ jobs:
           
       - name: Calculate hash
         run: |
-          cd .pio/build/${{ github.event.inputs.board }}
+          cd Marlin/.pio/build/${{ github.event.inputs.board }}
           FIRMWARE_FILENAME=$(find . -name "*.bin" -type f)
           md5sum ${FIRMWARE_FILENAME} > ${FIRMWARE_FILENAME}.md5
           
       - name: Show output
         run: |
-          tree -a -L 5 .pio
+          tree -a -L 5 Marlin/.pio/build
 
       - name: Release firmware
         uses: softprops/action-gh-release@v1
@@ -77,5 +77,5 @@ jobs:
           tag_name: ${{ github.event.inputs.release_tag }}
           fail_on_unmatched_files: true
           files: |
-            '.pio/build/**/*.bin'
-            '.pio/build/**/*.md5'
+            'Marlin/.pio/build/**/*.bin'
+            'Marlin/.pio/build/**/*.md5'
