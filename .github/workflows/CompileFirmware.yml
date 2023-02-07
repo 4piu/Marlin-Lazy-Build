@@ -54,7 +54,7 @@ jobs:
 
       - name: Configuration before compiling
         run: |
-          cp -r ${{ github.event.inputs.config }}/* Marlin/Marlin/
+          cp -r "${{ github.event.inputs.config }}/*" Marlin/Marlin/
 
       - name: Compile firmware
         run: |
