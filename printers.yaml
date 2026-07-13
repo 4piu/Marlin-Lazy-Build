@@ -1,0 +1,13 @@
+# Manifest of printers this repo builds firmware for.
+#
+# To add a printer: add an entry below, then create patches/<name>/*.patch with
+# unified diffs (one per changed file) against the stock config at
+# config_repo/config_path on branch `release-<tracked_version>`. No workflow
+# changes needed.
+printers:
+  - name: ender-2-pro
+    board: STM32F103RE_creality
+    marlin_repo: MarlinFirmware/Marlin
+    config_repo: MarlinFirmware/Configurations
+    config_path: config/examples/Creality/Ender-2 Pro/CrealityV423
+    tracked_version: "2.1.2.5"

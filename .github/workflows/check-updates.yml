@@ -1,0 +1,49 @@
+name: Check for Marlin updates
+
+permissions:
+  contents: write
+  actions: write
+  issues: write
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        type: boolean
+        default: false
+        description: Report findings without updating printers.yaml or dispatching builds
+
+jobs:
+  check:
+    name: Check upstream releases
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install requests pyyaml
+
+      - name: Check for updates
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python scripts/sync_release.py check ${{ inputs.dry_run == true && '--dry-run' || '' }}
+
+      - name: Commit tracked_version bumps
+        if: inputs.dry_run != true
+        run: |
+          if ! git diff --quiet -- printers.yaml; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add printers.yaml
+            git commit -m "Advance tracked printer versions"
+            git push
+          fi

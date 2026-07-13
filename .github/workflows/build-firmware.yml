@@ -1,0 +1,87 @@
+# This a Github Action for building Marlin Firmware.
+# Marlin documentation on how to compile with platformio: https://marlinfw.org/docs/basics/install_platformio_cli.html
+
+name: Compile Marlin Firmware
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      printer:
+        required: true
+        default: ender-2-pro
+        description: Printer name, from printers.yaml
+      version:
+        description: Marlin version to build (default uses the tracked_version in printers.yaml)
+      release_name:
+        description: Release name for compiled firmware. Default uses "<printer>-<version>"
+
+jobs:
+  build_and_release:
+    name: Build and release firmware
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: pip install requests pyyaml
+
+      - name: Resolve printer
+        id: printer
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python scripts/sync_release.py resolve \
+            --printer "${{ inputs.printer }}" \
+            ${{ inputs.version != '' && format('--version {0}', inputs.version) || '' }}
+
+      - name: Setup PlatformIO
+        run: |
+          curl -fsSL -o get-platformio.py https://raw.githubusercontent.com/platformio/platformio-core-installer/master/get-platformio.py
+          python3 get-platformio.py
+          echo "${HOME}/.platformio/penv/bin/" >> $GITHUB_PATH
+
+      - name: Clone Marlin source code
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.printer.outputs.marlin_repo }}
+          ref: ${{ steps.printer.outputs.version }}
+          path: Marlin
+
+      - name: Apply printer config
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python scripts/sync_release.py apply \
+            --printer "${{ inputs.printer }}" \
+            --version "${{ steps.printer.outputs.version }}" \
+            --dest Marlin/Marlin
+
+      - name: Compile firmware
+        run: |
+          pio run --project-dir Marlin --environment ${{ steps.printer.outputs.board }}
+
+      - name: Calculate hash
+        run: |
+          cd Marlin/.pio/build/${{ steps.printer.outputs.board }}
+          FIRMWARE_FILENAME=$(find . -name "*.bin" -type f)
+          md5sum ${FIRMWARE_FILENAME} > ${FIRMWARE_FILENAME}.md5
+
+      - name: Create release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ inputs.release_name || format('{0}-{1}', inputs.printer, steps.printer.outputs.version) }}
+          tag_name: ${{ format('{0}-{1}', inputs.printer, steps.printer.outputs.version) }}
+          fail_on_unmatched_files: true
+          files: |
+            Marlin/.pio/build/${{ steps.printer.outputs.board }}/*.bin
+            Marlin/.pio/build/${{ steps.printer.outputs.board }}/*.md5
